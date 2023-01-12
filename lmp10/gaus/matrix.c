@@ -110,7 +110,7 @@ transpose_matrix (matrix_t * s)
 {
   matrix_t *d = NULL;
   if (s != NULL)
-    d = make_matrix (s->rn, s->cn);
+    d = make_matrix (s->cn, s->rn);
   if (d != NULL) {
     int i, j;
     for (i = 0; i < s->rn; i++)
@@ -247,3 +247,135 @@ matrix_t *scalar_matrix(double scalar, matrix_t *a)
 }
 
 
+int cgm_solver(matrix_t *m)
+// Rozwiazywanie liniowego ukladu rownan metoda gradientow sprzezonych.
+{
+	int k, i, j, n, idx1, idx2;
+	double a, tmpa;
+
+	n = m->rn;
+
+	// Rozdzielamy macierz m na A i b
+	matrix_t *A = make_matrix(n, n);
+	matrix_t *b = make_matrix(n, 1);
+
+	// Przepisywanie liczb do macierzy A
+	idx1 = 0;
+	idx2 = 0;
+	for (i = 0; i < n; i++)
+	{
+		for (j = 0; j < n; j++)
+		{
+			A->e[idx1] = m->e[idx2];
+			idx1++;
+			idx2++;
+		}
+		idx2++;
+	}
+
+	// Przepisywanie liczb do macierzy b
+	for (i = 0; i < n; i++)
+	{
+		b->e[i] = m->e[(i * (n + 1)) + n];
+	}
+
+	// Zerowanie macierzy rozwiazan
+	matrix_t *x = make_matrix(n, 1);
+	for (i = 0; i < n; i++)
+		x->e[i] = 0.0;
+
+	matrix_t **p = malloc(sizeof(matrix_t*) * (n + 1));
+	matrix_t **r = malloc(sizeof(matrix_t*) * (n + 1));
+
+	matrix_t *tmp1 = NULL;
+	matrix_t *tmp2 = NULL;
+	matrix_t *tmp3 = NULL;
+
+	// Wektor residualny
+	p[0] = copy_matrix(b);
+	r[0] = copy_matrix(b);
+
+	for (k = 0; k < n; k++)
+	{
+		// Zwalnianie macierzy, by uniknac wyciekow.
+		if (tmp1 != NULL)
+			free_matrix(tmp1);
+		if (tmp2 != NULL)
+			free_matrix(tmp2);
+		if (tmp3 != NULL)
+			free_matrix(tmp3);
+		
+		// Obliczanie alpha[k]
+		tmp1 = transpose_matrix(r[k]);
+		tmp2 = mull_matrix(tmp1, r[k]); 
+		tmpa = tmp2->e[0]; // tu jest licznik ulamka
+
+		free_matrix(tmp1);
+		free_matrix(tmp2);
+		
+		tmp1 = transpose_matrix(p[k]);
+		tmp2 = mull_matrix(tmp1, A);
+		tmp3 = mull_matrix(tmp2, p[k]); // tu jest mianownik ulamka
+
+		a = tmpa / tmp3->e[0];
+
+		// Obliczanie x[k]
+		free_matrix(tmp1);
+		tmp1 = scalar_matrix(a, p[k]);
+		x = add_matrix(x, tmp1);
+		
+		// Obliczanie r[k+1]
+		free_matrix(tmp1);
+		free_matrix(tmp2);
+		tmp1 = mull_matrix(A, p[k]);
+		tmp2 = scalar_matrix(a, tmp1);
+		r[k + 1] = subtract_matrix(r[k], tmp2);
+	
+		// Obliczanie beta[k]
+		free_matrix(tmp1);
+		free_matrix(tmp2);
+		tmp1 = transpose_matrix(r[k + 1]);
+		tmp2 = mull_matrix(tmp1, r[k + 1]); // tu jest licznik ulamka
+		
+		a = tmp2->e[0] / tmpa; // mianownik bety jest taki sam jak licznik dla alfy
+	
+		// Obliczanie p[k+1]
+		free_matrix(tmp1);
+		tmp1 = scalar_matrix(a, p[k]);
+		p[k + 1] = add_matrix(r[k + 1], tmp1);
+	}
+	
+	// Zerowanie macierzy i ustawianie 1 na diagonali	
+	for (i = 0; i < n; i++)
+	{
+		for (j = 0; j < n; j++)
+		{
+			if (i == j)
+				m->e[i * (n + 1) + j] = 1.0;
+			else			
+				m->e[i * (n + 1) + j] = 0.0;
+		}
+	}
+
+	// Przepisanie odpowiedzi do pierwotnego ukladu
+	for (i = 0; i < n; i++)
+	{
+		m->e[(i * (n + 1)) + n] = x->e[i];
+	}
+
+	free_matrix(A);
+	free_matrix(b);
+	free_matrix(x);
+	free_matrix(tmp1);
+	free_matrix(tmp2);
+	free_matrix(tmp3);
+	for (i = 0; i < n + 1; i++)
+	{
+		free_matrix(p[i]);
+		free_matrix(r[i]);
+	}
+	free(p);
+	free(r);
+
+	return 0;
+}

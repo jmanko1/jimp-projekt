@@ -215,3 +215,35 @@ bs_matrix (matrix_t * a)
   else
     return 1;
 }
+
+
+matrix_t *add_matrix(matrix_t *a, matrix_t *b)
+// Dodawanie do siebie dwoch macierzy.
+{
+	matrix_t *c = make_matrix(a->rn, a->cn);
+	for(int i = 0; i < (a->rn * a->cn); i++)
+		c->e[i] = a->e[i] + b->e[i];
+	return c;
+}
+
+
+matrix_t *subtract_matrix(matrix_t *a, matrix_t *b)
+// Odejmomwanie macierzy b od a.
+{
+	matrix_t *c = make_matrix(a->rn, a->cn);
+	for(int i = 0; i < (a->rn * a->cn); i++)
+		c->e[i] = a->e[i] - b->e[i];
+	return c;
+}
+
+
+matrix_t *scalar_matrix(double scalar, matrix_t *a)
+// Mnozenie macierzy przez skalar.
+{
+	matrix_t *b = copy_matrix(a);
+	for(int i = 0; i < (a->rn * a->cn); i++)
+		b->e[i] *= scalar;
+	return b;
+}
+
+

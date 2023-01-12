@@ -1,0 +1,60 @@
+* commit fb3eed80c17a4667ac9e72e08f4142a3fc6d3a1f (HEAD -> main, origin/main)
+| Author: fraczem1 <dmitriwear@gmail.com>
+| Date:   Thu Jan 12 13:00:01 2023 +0100
+| 
+|     Gnuplot test
+| 
+* commit 1018e1cc23cbaf939527bcee5c6a154488073c85 (origin/conjugate_gradient_method, conjugate_gradient_method)
+| Author: fraczem1 <dmitriwear@gmail.com>
+| Date:   Thu Jan 12 12:25:28 2023 +0100
+| 
+|     Testing
+| 
+* commit aafe7f2e59b80b67659bac696cb98aeba780d001
+| Author: fraczem1 <dmitriwear@gmail.com>
+| Date:   Thu Jan 12 12:10:10 2023 +0100
+| 
+|     GAUSS and CGM choice
+| 
+* commit 8bbfbc53e8fba811d412f7a2582567050f31d4be
+| Author: fraczem1 <dmitriwear@gmail.com>
+| Date:   Thu Jan 12 05:05:13 2023 +0100
+| 
+|     Implementation of conjugate gradient method
+| 
+* commit d443457f512c5c5ddd2c14418d7873673132710a
+| Author: fraczem1 <dmitriwear@gmail.com>
+| Date:   Thu Jan 12 04:25:53 2023 +0100
+| 
+|     Added new matrix functions
+|   
+| * commit c23aeb4c022f4f339f536d3cb71f69378140f49c (origin/test, test)
+|/  Author: fraczem1 <dmitriwear@gmail.com>
+|   Date:   Thu Jan 12 04:15:00 2023 +0100
+|   
+|       Completed test case
+|   
+| * commit 057a7eca241c072c5aa8c795e65e3c602b039c36 (origin/cgmethod, cgmethod)
+|/  Author: fraczem1 <dmitriwear@gmail.com>
+|   Date:   Wed Jan 11 22:19:08 2023 +0100
+|   
+|       Some changes
+|   
+*   commit 73f1339f5c76e821048c8c3a25616fdbd4c13529
+|\  Merge: 9742503 1bb1f40
+| | Author: fraczem1 <dmitriwear@gmail.com>
+| | Date:   Wed Jan 11 20:05:33 2023 +0100
+| | 
+| |     Merge branch 'main' of https://gitlab.iem.pw.edu.pl/fraczem1/jimp-projekt into main
+| | 
+| * commit 1bb1f40b8d63dd921fe1e63dc3391d8cbf88e87e
+|   Author: Mikolaj Fraczek <dmitriwear@gmail.com>
+|   Date:   Wed Jan 11 18:51:03 2023 +0000
+|   
+|       Initial commit
+| 
+* commit 9742503b963fdb7c57582e8d24e24dfaabf62fa3
+  Author: fraczem1 <dmitriwear@gmail.com>
+  Date:   Wed Jan 11 19:56:51 2023 +0100
+  
+      Initial release

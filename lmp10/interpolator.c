@@ -45,7 +45,6 @@ make_spl (points_t * pts, spline_t * spl)
 		spl->n = 0;
 		return;
 	}
-	write_matrix(eqs, stdout);
 #else
 	if( piv_ge_solver( eqs ) ) {
 		spl->n = 0;

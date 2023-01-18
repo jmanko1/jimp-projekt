@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 matrix_t *
 make_matrix (int rn, int cn)
@@ -217,23 +218,19 @@ bs_matrix (matrix_t * a)
 }
 
 
-matrix_t *add_matrix(matrix_t *a, matrix_t *b)
+void add_matrix(matrix_t *a, matrix_t *b, double scalar, matrix_t **out)
 // Dodawanie do siebie dwoch macierzy.
 {
-	matrix_t *c = make_matrix(a->rn, a->cn);
 	for(int i = 0; i < (a->rn * a->cn); i++)
-		c->e[i] = a->e[i] + b->e[i];
-	return c;
+		(*out)->e[i] = a->e[i] + (b->e[i] * scalar);
 }
 
 
-matrix_t *subtract_matrix(matrix_t *a, matrix_t *b)
+void subtract_matrix(matrix_t *a, matrix_t *b, double scalar, matrix_t **out)
 // Odejmomwanie macierzy b od a.
 {
-	matrix_t *c = make_matrix(a->rn, a->cn);
 	for(int i = 0; i < (a->rn * a->cn); i++)
-		c->e[i] = a->e[i] - b->e[i];
-	return c;
+		(*out)->e[i] = a->e[i] - (b->e[i] * scalar);
 }
 
 
@@ -244,6 +241,17 @@ matrix_t *scalar_matrix(double scalar, matrix_t *a)
 	for(int i = 0; i < (a->rn * a->cn); i++)
 		b->e[i] *= scalar;
 	return b;
+}
+
+
+matrix_t *flip_matrix(matrix_t *a)
+{
+	matrix_t *new = copy_matrix(a);
+
+	new->rn = a->cn;
+	new->cn = a->rn;
+
+	return new;
 }
 
 
@@ -284,79 +292,64 @@ int cgm_solver(matrix_t *m)
 	for (i = 0; i < n; i++)
 		x->e[i] = 0.0;
 
-	matrix_t **p = malloc(sizeof(matrix_t*) * (n + 1));
-	matrix_t **r = malloc(sizeof(matrix_t*) * (n + 1));
-
 	matrix_t *tmp1 = NULL;
 	matrix_t *tmp2 = NULL;
-	matrix_t *tmp3 = NULL;
+	matrix_t *rT = NULL;
+	matrix_t *pT = NULL;
 
 	// Wektor residualny
-	p[0] = copy_matrix(b);
-	r[0] = copy_matrix(b);
-
-	for (k = 0; k < n; k++)
+	matrix_t *r = copy_matrix(b);
+	matrix_t *p = copy_matrix(b);
+	
+	while(1)
 	{
 		// Zwalnianie macierzy, by uniknac wyciekow.
 		if (tmp1 != NULL)
 			free_matrix(tmp1);
 		if (tmp2 != NULL)
 			free_matrix(tmp2);
-		if (tmp3 != NULL)
-			free_matrix(tmp3);
+		if (rT != NULL)
+			free_matrix(rT);
+		if (pT != NULL)
+			free_matrix(pT);
+		
+		rT = flip_matrix(r);
+		
+		// Czy konczymy
+		tmp1 = mull_matrix(rT, r); 
+		if (fabs(tmp1->e[0]) < 0.001)
+			break;
 		
 		// Obliczanie alpha[k]
-		tmp1 = transpose_matrix(r[k]);
-		tmp2 = mull_matrix(tmp1, r[k]); 
-		tmpa = tmp2->e[0]; // tu jest licznik ulamka
-
 		free_matrix(tmp1);
-		free_matrix(tmp2);
-		
-		tmp1 = transpose_matrix(p[k]);
-		tmp2 = mull_matrix(tmp1, A);
-		tmp3 = mull_matrix(tmp2, p[k]); // tu jest mianownik ulamka
+		tmp1 = mull_matrix(rT, r); 
+		tmpa = tmp1->e[0]; // tu jest licznik ulamka
 
-		a = tmpa / tmp3->e[0];
+		pT = flip_matrix(p);
+		tmp1 = mull_matrix(pT, A);
+		tmp2 = mull_matrix(tmp1, p); // tu jest mianownik ulamka
+
+		a = tmpa / tmp2->e[0];
 
 		// Obliczanie x[k]
-		free_matrix(tmp1);
-		tmp1 = scalar_matrix(a, p[k]);
-		x = add_matrix(x, tmp1);
+		add_matrix(x, p, a, &x);
 		
 		// Obliczanie r[k+1]
 		free_matrix(tmp1);
-		free_matrix(tmp2);
-		tmp1 = mull_matrix(A, p[k]);
-		tmp2 = scalar_matrix(a, tmp1);
-		r[k + 1] = subtract_matrix(r[k], tmp2);
-	
+		tmp1 = mull_matrix(A, p);
+		subtract_matrix(r, tmp1, a, &r);
+
 		// Obliczanie beta[k]
-		free_matrix(tmp1);
-		free_matrix(tmp2);
-		tmp1 = transpose_matrix(r[k + 1]);
-		tmp2 = mull_matrix(tmp1, r[k + 1]); // tu jest licznik ulamka
+		free_matrix(rT); free_matrix(tmp1);
+		rT = flip_matrix(r);
+		tmp1 = mull_matrix(rT, r); // tu jest licznik ulamka
 		
-		a = tmp2->e[0] / tmpa; // mianownik bety jest taki sam jak licznik dla alfy
+		a = tmp1->e[0] / tmpa; // mianownik bety jest taki sam jak licznik dla alfy
 	
 		// Obliczanie p[k+1]
-		free_matrix(tmp1);
-		tmp1 = scalar_matrix(a, p[k]);
-		p[k + 1] = add_matrix(r[k + 1], tmp1);
+		add_matrix(r, p, a, &p);
 	}
 	
-	// Zerowanie macierzy i ustawianie 1 na diagonali	
-	for (i = 0; i < n; i++)
-	{
-		for (j = 0; j < n; j++)
-		{
-			if (i == j)
-				m->e[i * (n + 1) + j] = 1.0;
-			else			
-				m->e[i * (n + 1) + j] = 0.0;
-		}
-	}
-
 	// Przepisanie odpowiedzi do pierwotnego ukladu
 	for (i = 0; i < n; i++)
 	{
@@ -367,13 +360,7 @@ int cgm_solver(matrix_t *m)
 	free_matrix(b);
 	free_matrix(x);
 	free_matrix(tmp1);
-	free_matrix(tmp2);
-	free_matrix(tmp3);
-	for (i = 0; i < n + 1; i++)
-	{
-		free_matrix(p[i]);
-		free_matrix(r[i]);
-	}
+	free_matrix(rT);
 	free(p);
 	free(r);
 

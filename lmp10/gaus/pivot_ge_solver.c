@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 
 int
 main (int argc, char **argv)
@@ -15,6 +16,7 @@ main (int argc, char **argv)
       int *row_per = malloc (m->rn * sizeof *row_per);
       printf ("\nMacierz:\n");
       write_matrix (m, stdout);
+      clock_t start = clock();
       if (argc > 2 && strcmp (argv[2], "-s") == 0) {
         c = symm_pivot_ge_matrix (m, row_per);
         sym = 1;
@@ -32,6 +34,8 @@ main (int argc, char **argv)
         if (bs_matrix (c) == 0) {
           int j;
           int *iper = pivot_get_inv_per (c, row_per);
+     		clock_t end = clock();
+     		float seconds = (float)(end - start) / CLOCKS_PER_SEC;
           printf ("Permutacja odwrotna:");
           for (i = 0; i < c->rn; i++)
             printf (" %d", iper[i]);
@@ -46,6 +50,7 @@ main (int argc, char **argv)
               printf ("\t%g", *(c->e + oi * c->cn + j + c->rn));
             }
             printf ("\n");
+     		printf("time elapsed: %f seconds.\n", seconds);
           }
         }
       }
